@@ -5,7 +5,7 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Grove.Cookie
+module Cookie
   ( Cookie(..)
   , CookieContent(..)
   , SameSite(..)
