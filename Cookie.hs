@@ -14,19 +14,24 @@ module Cookie
   , decodeCookie
   ) where
 
+import Chronos.Types (Datetime, Timespan)
 import Data.Bifunctor (second)
 import Data.Bool (bool)
 import Data.ByteString (ByteString)
+import Data.Coerce (coerce)
 import Data.Hashable (Hashable)
 import Data.Monoid (Monoid)
 import Data.Semigroup ((<>))
 import Data.Text (Text)
+import Data.Time (UTCTime(UTCTime), formatTime, defaultTimeLocale)
+import qualified Chronos as C
 import qualified Chronos.Types as C
 import qualified Data.List as L
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
 import qualified Data.Text.Lazy.Builder as TL
 import qualified Data.Text.Lazy.Builder.Int as TL
+import qualified Data.Time as UTC
 
 data CookieContent a = CookieContent
   { cookieContentName  :: !Text
@@ -56,7 +61,7 @@ encodeCookie :: (a -> ByteString) -> Cookie a -> TL.Builder
 encodeCookie encodeContent (Cookie (CookieContent name value) expires maxAge domain path secure httpOnly sameSite) =
   (mconcat . L.intersperse "; " . mconcat)
   [ [ TL.fromText name <> "=" <> (TL.fromText . TE.decodeUtf8 . encodeContent) value ]
-  , maybeToList expires $ \_ -> error "Frank.Cookie.encodeCookie: Expires is unimplemented"
+  , maybeToList expires $ \ex -> "Expires=" <> TL.fromText (formatExpires $ datetimeToUTCTime ex)
   , maybeToList maxAge $ \ma -> "Max-Age=" <> TL.decimal (C.getTimespan ma `div` 1000000000)
   , maybeToList domain $ \d -> "Domain=" <> TL.fromText d
   , maybeToList path $ \p -> "Path=/" <> TL.fromText (T.intercalate "/" p)
@@ -67,6 +72,14 @@ encodeCookie encodeContent (Cookie (CookieContent name value) expires maxAge dom
       SameSiteStrict -> "SameSite=Strict"
   ]
   where
+    datetimeToUTCTime :: Datetime -> UTCTime
+    datetimeToUTCTime dt@(C.Datetime _ (C.TimeOfDay h m n)) = UTCTime d undefined
+      where
+        dif = UTC.secondsToDiffTime $ fromIntegral (3600 * h + 60 * m + fromIntegral (n `div` 1000000000))
+        d = UTC.ModifiedJulianDay $ fromIntegral $ C.getDay $ C.timeToDayTruncate $ C.datetimeToTime dt
+    formatExpires :: UTCTime -> Text
+    formatExpires = T.pack . formatTime defaultTimeLocale expiresFormat
+    expiresFormat = "%a, %d-%b-%Y %X GMT"
     maybeToList m f = maybe [] ((:[]) . f) m
 
 decodeCookie :: (Text -> Either Text a) -> Text -> Either Text (Cookie a)
