@@ -1,4 +1,3 @@
-{-# LANGUAGE BangPatterns      #-}
 {-# LANGUAGE DeriveFoldable    #-}
 {-# LANGUAGE DeriveFunctor     #-}
 {-# LANGUAGE DeriveTraversable #-}
@@ -18,14 +17,10 @@ import Chronos.Types (Datetime, Timespan)
 import Data.Bifunctor (second)
 import Data.Bool (bool)
 import Data.ByteString (ByteString)
-import Data.Coerce (coerce)
-import Data.Hashable (Hashable)
-import Data.Monoid (Monoid)
 import Data.Semigroup ((<>))
 import Data.Text (Text)
 import Data.Time (UTCTime(UTCTime), formatTime, defaultTimeLocale)
 import qualified Chronos as C
-import qualified Chronos.Types as C
 import qualified Data.List as L
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as TE
@@ -75,7 +70,6 @@ encodeCookie encodeContent (Cookie (CookieContent name value) expires maxAge dom
     datetimeToUTCTime :: Datetime -> UTCTime
     datetimeToUTCTime dt@(C.Datetime _ (C.TimeOfDay h m n)) = UTCTime d undefined
       where
-        dif = UTC.secondsToDiffTime $ fromIntegral (3600 * h + 60 * m + fromIntegral (n `div` 1000000000))
         d = UTC.ModifiedJulianDay $ fromIntegral $ C.getDay $ C.timeToDayTruncate $ C.datetimeToTime dt
     formatExpires :: UTCTime -> Text
     formatExpires = T.pack . formatTime defaultTimeLocale expiresFormat
