@@ -1,7 +1,7 @@
 name:                cookies
 version:             0.1.0.0
 synopsis:            web cookies
-description:         simple web cookies 
+description:         simple web cookies
 homepage:            https://github.com/chessai/cookies.git
 license:             BSD3
 license-file:        LICENSE
@@ -15,6 +15,7 @@ cabal-version:       >=1.10
 
 library
   exposed-modules:     Cookie
+  ghc-options:         -Wall
   build-depends:
       base >=4.7 && < 5.0
     , bytestring >= 0.10
